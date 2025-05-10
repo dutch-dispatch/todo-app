@@ -62,7 +62,7 @@ export default {
     today() {
       // Format today's date as YYYY-MM-DD for input min
       const d = new Date();
-      return d.toISOString().substr(0, 10);
+      return d.toISOString().substring(0, 10);
     }
   },
   methods: {
