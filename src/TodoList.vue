@@ -1,3 +1,4 @@
+
 <template>
   <div class="todolist-container">
     <h1 class="funky-title">80s Funky Todo</h1>
@@ -8,11 +9,18 @@
         class="funky-input"
         maxlength="48"
       />
+      <input
+        type="date"
+        v-model="newDueDate"
+        class="date-picker"
+        :min="today"
+        title="Due date"
+      />
       <button class="funky-btn">Let’s Go!</button>
     </form>
     <ul class="todo-list">
       <li
-        v-for="todo in todos"
+        v-for="todo in sortedTodos"
         :key="todo.id"
         :class="{done: todo.done}"
       >
@@ -21,6 +29,9 @@
           <span v-else>⬜</span>
         </span>
         <span class="todo-text">{{ todo.text }}</span>
+        <span class="due-date" v-if="todo.dueDate">
+          <span class="due-date-label">⏰</span>{{ formatDueDate(todo.dueDate) }}
+        </span>
         <button @click="removeTodo(todo)" class="delete-btn">✖</button>
       </li>
     </ul>
@@ -33,7 +44,24 @@ export default {
   data() {
     return {
       newTodo: '',
+      newDueDate: '',
       todos: []
+    }
+  },
+  computed: {
+    // Always show todos sorted by dueDate (ascending). If no dueDate, place at end.
+    sortedTodos() {
+      return [...this.todos].sort((a, b) => {
+        if (!a.dueDate && !b.dueDate) return 0;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return a.dueDate.localeCompare(b.dueDate);
+      });
+    },
+    today() {
+      // Format today's date as YYYY-MM-DD for input min
+      const d = new Date();
+      return d.toISOString().substr(0, 10);
     }
   },
   methods: {
@@ -43,15 +71,23 @@ export default {
       this.todos.push({
         id: Date.now(),
         text,
-        done: false
+        done: false,
+        dueDate: this.newDueDate || null
       });
       this.newTodo = '';
+      this.newDueDate = '';
     },
     removeTodo(todo) {
       this.todos = this.todos.filter(t => t.id !== todo.id);
     },
     toggleDone(todo) {
       todo.done = !todo.done;
+    },
+    formatDueDate(dateStr) {
+      if (!dateStr) return '';
+      // Format date as e.g. "Apr 19, 2024"
+      const options = { year: 'numeric', month: 'short', day: 'numeric' };
+      return new Date(dateStr).toLocaleDateString(undefined, options);
     }
   }
 }
@@ -88,7 +124,7 @@ export default {
 }
 
 .funky-input {
-  flex: 1;
+  flex: 1 1 60%;
   background: #000;
   color: #00ffe7;
   font-family: inherit;
@@ -102,9 +138,24 @@ export default {
   transition: border 0.2s;
 }
 
-.funky-input:focus {
-  border-color: #ff5f6d;
+.date-picker {
+  flex: 1 1 40%;
+  background: #232941;
   color: #ff5f6d;
+  border: 2px solid #ff5f6d;
+  border-radius: 0;
+  outline: none;
+  margin-left: -1px;
+  margin-right: 8px;
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.6rem;
+  box-shadow: 0 0 8px #ff5f6db4;
+  transition: border 0.2s;
+}
+.date-picker:focus {
+  border-color: #fff700;
+  color: #fff700;
 }
 
 .funky-btn {
@@ -162,10 +213,26 @@ export default {
 }
 
 .todo-text {
-  flex:1;
+  flex: 1 1 50%;
   word-break: break-word;
   font-family: inherit;
   letter-spacing: 0.3px;
+}
+
+.due-date {
+  color: #fff700;
+  background: #000a;
+  border-radius: 8px;
+  font-size: 0.92em;
+  padding: 0.15em 0.6em;
+  margin-left: 1.1em;
+  font-family: inherit;
+  box-shadow: 0 0 6px #ff5f6ddd;
+  display: flex;
+  align-items: center;
+}
+.due-date-label {
+  margin-right: 0.3em;
 }
 
 .delete-btn {
